@@ -256,6 +256,73 @@ public class MemberentityFacadeREST extends AbstractFacade<Memberentity> {
         }
     }
 
+     @PUT
+    @Path("updateMemberData")
+    @Produces({"application/json"})
+    public Response UpdateMemberData( @QueryParam("name") String name, @QueryParam("phone") String phoneNo,
+          @QueryParam("address") String address, @QueryParam("securityQuestion") int securityQuestion, 
+          @QueryParam("securityAnswer") String securityAnswer, @QueryParam("age") int age, 
+          @QueryParam("income") int income, @QueryParam("password") String password, @QueryParam("email") String email){
+        
+        try{
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/islandfurniture-it07?zeroDateTimeBehavior=convertToNull&user=root&password=12345");
+            String stmt = "UPDATE memberentity SET NAME = ?, PHONE = ?, ADDRESS = ?, SECURITYQUESTION = ?, " 
+                    + "SECURITYANSWER = ?, AGE = ?, INCOME = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(stmt);
+            pstmt.setString(1, name);
+            pstmt.setString(2, phoneNo);
+            pstmt.setString(4, address);
+            pstmt.setInt(5, securityQuestion);
+            pstmt.setString(6, securityAnswer);
+            pstmt.setInt(7, age);
+            pstmt.setInt(8, income);
+            
+            //Check if password field is not null
+            if(!password.equals("")){
+                stmt+= ", passwordhash = ?, passwordsalt = ?";
+            }
+ 
+            stmt += " WHERE email = ?";
+            
+            if(!password.equals("")){
+                String pwSalt = generatePasswordSalt();
+                String pwHash = generatePasswordHash(pwSalt, password);
+                
+                //check if new password is same as existing password
+                String stmt2 = "SELECT * FROM memberentity WHERE EMAIL=?";
+                PreparedStatement pstmt2 = conn.prepareStatement(stmt2);
+                pstmt.setString(1, email);
+                ResultSet rs = pstmt2.executeQuery();
+                String existingPwHash = rs.getString("PASSWORDHASH");
+                if(pwHash.equals(existingPwHash)){
+                    pstmt.close();
+                    pstmt2.close();
+                    rs.close();
+                    conn.close();
+                    return Response.status(Response.Status.BAD_REQUEST).build();
+                }
+                
+                pstmt.setString(9, pwHash);
+                pstmt.setString(10, pwSalt);
+                pstmt.setString(11, email);
+            } else{
+                pstmt.setString(9, email);
+            }
+            
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            conn.close();
+            //If update successful
+            if (result > 0){
+                return Response.status(Response.Status.OK).build();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Response.status(Response.Status.BAD_REQUEST).build();
+    }
+    
     @Override
     protected EntityManager getEntityManager() {
         return em;
