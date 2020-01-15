@@ -239,20 +239,21 @@ public class MemberentityFacadeREST extends AbstractFacade<Memberentity> {
             member.setSecurityAnswer(rs.getString("SECURITYANSWER"));
             member.setAge(rs.getInt("AGE"));
             member.setIncome(rs.getInt("INCOME"));
-            
-            GenericEntity<Member> memberEnt = new GenericEntity<Member>(member) {};
+
+            GenericEntity<Member> memberEnt = new GenericEntity<Member>(member) {
+            };
 
             rs.close();
             ps.close();
             conn.close();
-            
-             return Response
-              .status(200)
-              .entity(memberEnt)
-              .build();
+
+            return Response
+                    .status(200)
+                    .entity(memberEnt)
+                    .build();
         } catch (Exception ex) {
-             ex.printStackTrace();
-             return Response.status(Response.Status.NOT_FOUND).build();
+            ex.printStackTrace();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 
